@@ -48,7 +48,7 @@ footer {
 	width: 270px;
 	float: left;
 	position: fixed;
-	bottom: 50px;
+	bottom: 30px;
 }
 
 .wrapper {
@@ -72,7 +72,11 @@ footer {
 	color: #39c;
 	background-color: white;
 }
-
+.navbar .nav li.dropdown > .dropdown-toggle .caret-white
+{
+    border-top-color:white;
+    border-bottom-color:white;
+}
 .navbar-default .navbar-nav > li > a:hover,
 .navbar-default .navbar-nav > li > a:focus {
 	color: #39c;
