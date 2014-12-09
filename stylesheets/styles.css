@@ -15,7 +15,7 @@ img {
 	max-width: 100%;
 }
 
-p, h1 {
+p, h1, h2, h3, h4, h5, h6 {
 	margin: 0 0 5px;
 }
 
@@ -48,7 +48,7 @@ footer {
 	width: 270px;
 	float: left;
 	position: fixed;
-	bottom: 30px;
+	bottom: 10px;
 }
 
 .wrapper {
@@ -56,15 +56,12 @@ footer {
 	margin: 0 auto;
 }
 
-.navbar-fixed-top {
-	background-image: none;
-	border: none;
-	background-color: #39c;
-	box-shadow: none;
+.navbar {
+	margin: 0 auto;
 }
 
 .navbar-default .navbar-brand {
-	color: white;
+	color: #39c;
 }
 
 .navbar-default .navbar-brand:hover,
@@ -84,20 +81,19 @@ footer {
 }
 
 .navbar .nav > li > a {
-	color: white;
+	color: #39c;
 }
 
-.navbar {
+.navbar-default .navbar-toggle .icon-bar {
+	background-color: #39c;
+}
+
+.navbar-default {
 	font-family: 'Roboto Condensed', sans-serif;
-	padding-left: 18%;
 }
 
 .navbar-brand {
 	font-size: 28px;
-}
-
-.navbar-right {
-	padding-right: 15%;
 }
 
 @media print, screen and (max-width: 960px) {

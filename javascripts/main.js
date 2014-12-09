@@ -18,5 +18,3 @@
 // 		}
 // 	];
 // }) ();
-
-$('.dropdown-toggle').dropdown();
