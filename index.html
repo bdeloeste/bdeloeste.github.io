@@ -22,7 +22,6 @@
   <body>
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container-fluid">
-        <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
             <span class="sr-only">Toggle navigation</span>
@@ -39,14 +38,15 @@
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Projects <span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
+                <li><a href="https://github.com/bdeloeste/Character-Table-VGA-Display">Character LUT VGA Module</a></li>
                 <li><a href="https://github.com/bdeloeste/KL25Z-Mouse-Accelerometer">Microcontroller Mouse</a></li>
                 <li><a href="https://github.com/bdeloeste/Nexys-4-Temperature-Sensor--ADT-7420">FPGA Temperature Sensor</a></li>
                 <li><a href="https://github.com/bdeloeste/VGA-multi-color-display">VGA Multi-Color Display</a></li>
               </ul>
             </li>
           </ul>
-        </div><!-- /.navbar-collapse -->
-      </div><!-- /.container-fluid -->
+        </div>
+      </div>
     </nav>
     <div class="wrapper">
       <header>
@@ -74,69 +74,109 @@
         </table>
       </header> 
       <section> 
-        <h3>VGA Multicolor Display</h3>
+        <h3>VGA Displays</h3>
         <p>
-          I played around with the Nexys 4 board and was inspired to understand what went on under the hood of the VGA port. The particular VGA controller that I wrote is specified for a 640 by 480 pixel display running with a vertical refresh rate of about 60Hz. More on specifications on VGA displays <a href="http://ece.gmu.edu/coursewebpages/ECE/ECE448/S13/viewgraphs/ECE448_lecture7_VGA_1.pdf">here</a>.
+          I took a digital systems and design course which focused on learning hardware description languages, specifically Verilog, and applying them to develop basic applications for Field Programmable Gate Arrays (FPGA's). We had the opportunity to use Digilent's Nexys 4 Artix-7 board and contained several peripherals listed <a href="http://www.digilentinc.com/Products/Detail.cfm?Prod=NEXYS4">here</a>. Although the course syllabus didn't specify the use of the board's 12-bit VGA output, I was fascinated to learn its inner workings. 
+        </p>
+        <p>  
+          When considering implementation of a working VGA module in Verilog, it was pivotal to provide concise parameters and signal timings. First and foremost, common 640x480 VGA modes that runs at 60 Hz noninterlaced require a 25 MHz pixel clock as well as making sure your maximum horiztonal and vertical pixel count do not exceed 800 and 600 pixels respectively. These extra pixels come from the front and back porches of the display. I specify these pixel parameters below in tandem with a table that breaks down signal timings from the Nexys 4 reference manual:
         </p>
         <p>
-          
+          <pre><code>parameter hpixels = 800;
+parameter vlines = 521;
+parameter hpulse = 96;
+parameter vpulse = 2;
+parameter hbp = 144;
+parameter hfp = 784;
+parameter vbp = 31;
+parameter vfp = 511;</code></pre>
+          <table>
+            <tr>
+              <th>Parameter</th><th>Vertical Sync (Pixels)</th><th>Horitontal Sync (Pixels)</th>
+            </tr>
+            <tr>
+              <td>Sync Pulse</td><td>521</td><td>800</td>
+            </tr>
+            <tr>
+              <td>Display Time</td><td>480</td><td>640</td>
+            </tr>
+            <tr>
+              <td>Pulse Width</td><td>2</td><td>96</td>
+            </tr>
+            <tr>
+              <td>Front Porch</td><td>10</td><td>16</td>
+            </tr>
+            <tr>
+              <td>Back Porch</td><td>29</td><td>48</td>
+            </tr>
+          </table>
         </p>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          VGA displays operate by shooting a beam from an electron gun through a cathode ray tube which makes contact with a phosphor surface that glows on impact. The beam then scans from left to right starting from the top of the display. When it reaches the end, the beam will turn off and will continue this process on the next row until it reaches the end of the column. Since the electron beam has some "blanking" periods when it resets to begin new horizontal and vertical scans, it's important to account for these periods by specifying when the electron gun is off. Implementation in Verilog with the horizontal and vertical counter syncing is as follows:
+          <pre><code>always @ (posedge pclk or posedge clr)
+begin
+  if (clr == 1)
+  begin
+    hc <= 0;
+    vc <= 0;
+  end
+  else
+  begin
+    if (hc < hpixels - 1)
+      hc <= hc + 1;
+    else
+    begin
+      hc <= 0;
+      if (vc < vlines - 1)
+        vc <= vc + 1;
+      else
+        vc <= 0;
+    end
+  end
+end
+
+assign hsync = (hc < hpulse) ? 0:1; 
+assign vsync = (vc < vpulse) ? 0:1;</code></pre> 
         </p>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          Notice that even though the display has a resolution of 640x480 pixels, the horizontal and vertical counters still need to increment with the front and back porches taken into account. Also, syncing the horizontal and vertical counters are defined as setting both syncs to zero as long as they are within the pulse widths previously enumerated in the signal timing table. 
         </p>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          Now, in order to display some meaningful outputs to the display, you have to set the pixel coordinates that you want to start writing data in. For good practice, it's necessary to make sure that the data you are writing is within the display region. So start by writing an if block as such:
         </p>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          <pre><code>always @ (*)
+begin
+  if (vc >= vbp & vc < vfp & hc >= hbp & hc < hfp)
+  begin
+    red = 4'b1111;
+    green = 4'b1111;
+    blue = 4'b1111;
+  end
+  else
+  begin
+    red = 0;
+    green = 0;
+    blue = 0;
+  end
+end</code></pre>
         </p>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          This will make the entire display white. Remember that this particular VGA display has 12 bits of resolution so red, green, and blue are only 4 bits each. Thus, setting RGB to 0xFFF essentially makes the output color white. Also note that I specified an else condition that sets the the rest of the display black. This is important to add with each if block since there can be some timing conflicts with the horizontal and vertical counters and will cause apparent glitches on the display.
         </p>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          This was a rudimentary primer on VGA displays and its utilization is directed toward programming it in Verilog. In order get a feel on how to further apply a VGA module, I've developed a few projects that highlight how to create shapes, graphs, and even developed a look-up table to display letters and numbers. The look-up table, however, still lacks aesthetics and only displays each character in one size (9x9 pixels). I'm working on providing a method of specifying the size of the character, but for now I wrote a function to easily specify which color you would like to display.
         </p>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          Happy displaying! Here are the links to my GitHub projects for VGA displays:
         </p>
+        <p>
+          <ul>
+            <li><a href="https://github.com/bdeloeste/Character-Table-VGA-Display">Character Display Table</a></li>
+            <li><a href="https://github.com/bdeloeste/VGA-multi-color-display">12-bit Multi-color Display</a></li>
+          </ul>
+        </p>
+        
 
       </section>
 

@@ -15,7 +15,7 @@ img {
 	max-width: 100%;
 }
 
-p, h1, h2, h3, h4, h5, h6 {
+p, pre, h1, h2, h3, h4, h5, h6 {
 	margin: 0 0 5px;
 }
 
@@ -24,6 +24,19 @@ h1 {
 	font-size: 28px;
 }
 
+code, pre {
+  font-family:Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal, monospace;
+  color:#333;
+  font-size:12px;
+}
+
+pre {
+  padding:8px 15px;
+  background: #f8f8f8;  
+  border-radius:5px;
+  border:1px solid #e5e5e5;
+  overflow-x: auto;
+}
 section {
 	width: 500px;
 	float: right;
